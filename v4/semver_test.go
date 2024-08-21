@@ -18,28 +18,29 @@ type formatTest struct {
 }
 
 var formatTests = []formatTest{
-	{Version{1, 2, 3, nil, nil}, "1.2.3"},
-	{Version{0, 0, 1, nil, nil}, "0.0.1"},
-	{Version{0, 0, 1, []PRVersion{prstr("alpha"), prstr("preview")}, []string{"123", "456"}}, "0.0.1-alpha.preview+123.456"},
-	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prnum(1)}, []string{"123", "456"}}, "1.2.3-alpha.1+123.456"},
-	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prnum(1)}, nil}, "1.2.3-alpha.1"},
-	{Version{1, 2, 3, nil, []string{"123", "456"}}, "1.2.3+123.456"},
+	{Version{1, 2, 3, nil, nil, false}, "1.2.3"},
+	{Version{0, 0, 1, nil, nil, false}, "0.0.1"},
+	{Version{0, 0, 1, []PRVersion{prstr("alpha"), prstr("preview")}, []string{"123", "456"}, false}, "0.0.1-alpha.preview+123.456"},
+	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prnum(1)}, []string{"123", "456"}, false}, "1.2.3-alpha.1+123.456"},
+	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prnum(1)}, nil, false}, "1.2.3-alpha.1"},
+	{Version{1, 2, 3, nil, []string{"123", "456"}, false}, "1.2.3+123.456"},
 	// Prereleases and build metadata hyphens
-	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prstr("b-eta")}, []string{"123", "b-uild"}}, "1.2.3-alpha.b-eta+123.b-uild"},
-	{Version{1, 2, 3, nil, []string{"123", "b-uild"}}, "1.2.3+123.b-uild"},
-	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prstr("b-eta")}, nil}, "1.2.3-alpha.b-eta"},
+	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prstr("b-eta")}, []string{"123", "b-uild"}, false}, "1.2.3-alpha.b-eta+123.b-uild"},
+	{Version{1, 2, 3, nil, []string{"123", "b-uild"}, false}, "1.2.3+123.b-uild"},
+	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prstr("b-eta")}, nil, false}, "1.2.3-alpha.b-eta"},
+	{Version{2024, 2, 0, []PRVersion{prstr("dev-0"), prnum(20240101), prstr("67c774337456-1")}, nil, true}, "2024.2.0~dev-0.20240101.67c774337456-1"},
 }
 
 var tolerantFormatTests = []formatTest{
-	{Version{1, 2, 3, nil, nil}, "v1.2.3"},
-	{Version{1, 2, 0, []PRVersion{prstr("alpha")}, nil}, "1.2.0-alpha"},
-	{Version{1, 2, 0, nil, nil}, "1.2.00"},
-	{Version{1, 2, 3, nil, nil}, "	1.2.3 "},
-	{Version{1, 2, 3, nil, nil}, "01.02.03"},
-	{Version{0, 0, 3, nil, nil}, "00.0.03"},
-	{Version{0, 0, 3, nil, nil}, "000.0.03"},
-	{Version{1, 2, 0, nil, nil}, "1.2"},
-	{Version{1, 0, 0, nil, nil}, "1"},
+	{Version{1, 2, 3, nil, nil, false}, "v1.2.3"},
+	{Version{1, 2, 0, []PRVersion{prstr("alpha")}, nil, false}, "1.2.0-alpha"},
+	{Version{1, 2, 0, nil, nil, false}, "1.2.00"},
+	{Version{1, 2, 3, nil, nil, false}, "	1.2.3 "},
+	{Version{1, 2, 3, nil, nil, false}, "01.02.03"},
+	{Version{0, 0, 3, nil, nil, false}, "00.0.03"},
+	{Version{0, 0, 3, nil, nil, false}, "000.0.03"},
+	{Version{1, 2, 0, nil, nil, false}, "1.2"},
+	{Version{1, 0, 0, nil, nil, false}, "1"},
 }
 
 func TestStringer(t *testing.T) {
@@ -55,7 +56,7 @@ func TestParse(t *testing.T) {
 		if v, err := Parse(test.result); err != nil {
 			t.Errorf("Error parsing %q: %q", test.result, err)
 		} else if comp := v.Compare(test.v); comp != 0 {
-			t.Errorf("Parsing, expected %q but got %q, comp: %d ", test.v, v, comp)
+			t.Errorf("Parsing, expected %q but got %q, comp: %d", test.v, v, comp)
 		} else if err := v.Validate(); err != nil {
 			t.Errorf("Error validating parsed version %q: %q", test.v, err)
 		}
@@ -96,16 +97,16 @@ func TestValidate(t *testing.T) {
 }
 
 var finalizeVersionMethod = []formatTest{
-	{Version{1, 2, 3, nil, nil}, "1.2.3"},
-	{Version{0, 0, 1, nil, nil}, "0.0.1"},
-	{Version{0, 0, 1, []PRVersion{prstr("alpha"), prstr("preview")}, []string{"123", "456"}}, "0.0.1"},
-	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prnum(1)}, []string{"123", "456"}}, "1.2.3"},
-	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prnum(1)}, nil}, "1.2.3"},
-	{Version{1, 2, 3, nil, []string{"123", "456"}}, "1.2.3"},
+	{Version{1, 2, 3, nil, nil, false}, "1.2.3"},
+	{Version{0, 0, 1, nil, nil, false}, "0.0.1"},
+	{Version{0, 0, 1, []PRVersion{prstr("alpha"), prstr("preview")}, []string{"123", "456"}, false}, "0.0.1"},
+	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prnum(1)}, []string{"123", "456"}, false}, "1.2.3"},
+	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prnum(1)}, nil, false}, "1.2.3"},
+	{Version{1, 2, 3, nil, []string{"123", "456"}, false}, "1.2.3"},
 	// Prereleases and build metadata hyphens
-	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prstr("b-eta")}, []string{"123", "b-uild"}}, "1.2.3"},
-	{Version{1, 2, 3, nil, []string{"123", "b-uild"}}, "1.2.3"},
-	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prstr("b-eta")}, nil}, "1.2.3"},
+	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prstr("b-eta")}, []string{"123", "b-uild"}, false}, "1.2.3"},
+	{Version{1, 2, 3, nil, []string{"123", "b-uild"}, false}, "1.2.3"},
+	{Version{1, 2, 3, []PRVersion{prstr("alpha"), prstr("b-eta")}, nil, false}, "1.2.3"},
 }
 
 func TestFinalizeVersionMethod(t *testing.T) {
@@ -124,34 +125,34 @@ type compareTest struct {
 }
 
 var compareTests = []compareTest{
-	{Version{1, 0, 0, nil, nil}, Version{1, 0, 0, nil, nil}, 0},
-	{Version{2, 0, 0, nil, nil}, Version{1, 0, 0, nil, nil}, 1},
-	{Version{0, 1, 0, nil, nil}, Version{0, 1, 0, nil, nil}, 0},
-	{Version{0, 2, 0, nil, nil}, Version{0, 1, 0, nil, nil}, 1},
-	{Version{0, 0, 1, nil, nil}, Version{0, 0, 1, nil, nil}, 0},
-	{Version{0, 0, 2, nil, nil}, Version{0, 0, 1, nil, nil}, 1},
-	{Version{1, 2, 3, nil, nil}, Version{1, 2, 3, nil, nil}, 0},
-	{Version{2, 2, 4, nil, nil}, Version{1, 2, 4, nil, nil}, 1},
-	{Version{1, 3, 3, nil, nil}, Version{1, 2, 3, nil, nil}, 1},
-	{Version{1, 2, 4, nil, nil}, Version{1, 2, 3, nil, nil}, 1},
+	{Version{1, 0, 0, nil, nil, false}, Version{1, 0, 0, nil, nil, false}, 0},
+	{Version{2, 0, 0, nil, nil, false}, Version{1, 0, 0, nil, nil, false}, 1},
+	{Version{0, 1, 0, nil, nil, false}, Version{0, 1, 0, nil, nil, false}, 0},
+	{Version{0, 2, 0, nil, nil, false}, Version{0, 1, 0, nil, nil, false}, 1},
+	{Version{0, 0, 1, nil, nil, false}, Version{0, 0, 1, nil, nil, false}, 0},
+	{Version{0, 0, 2, nil, nil, false}, Version{0, 0, 1, nil, nil, false}, 1},
+	{Version{1, 2, 3, nil, nil, false}, Version{1, 2, 3, nil, nil, false}, 0},
+	{Version{2, 2, 4, nil, nil, false}, Version{1, 2, 4, nil, nil, false}, 1},
+	{Version{1, 3, 3, nil, nil, false}, Version{1, 2, 3, nil, nil, false}, 1},
+	{Version{1, 2, 4, nil, nil, false}, Version{1, 2, 3, nil, nil, false}, 1},
 
 	// Spec Examples #11
-	{Version{1, 0, 0, nil, nil}, Version{2, 0, 0, nil, nil}, -1},
-	{Version{2, 0, 0, nil, nil}, Version{2, 1, 0, nil, nil}, -1},
-	{Version{2, 1, 0, nil, nil}, Version{2, 1, 1, nil, nil}, -1},
+	{Version{1, 0, 0, nil, nil, false}, Version{2, 0, 0, nil, nil, false}, -1},
+	{Version{2, 0, 0, nil, nil, false}, Version{2, 1, 0, nil, nil, false}, -1},
+	{Version{2, 1, 0, nil, nil, false}, Version{2, 1, 1, nil, nil, false}, -1},
 
 	// Spec Examples #9
-	{Version{1, 0, 0, nil, nil}, Version{1, 0, 0, []PRVersion{prstr("alpha")}, nil}, 1},
-	{Version{1, 0, 0, []PRVersion{prstr("alpha")}, nil}, Version{1, 0, 0, []PRVersion{prstr("alpha"), prnum(1)}, nil}, -1},
-	{Version{1, 0, 0, []PRVersion{prstr("alpha"), prnum(1)}, nil}, Version{1, 0, 0, []PRVersion{prstr("alpha"), prstr("beta")}, nil}, -1},
-	{Version{1, 0, 0, []PRVersion{prstr("alpha"), prstr("beta")}, nil}, Version{1, 0, 0, []PRVersion{prstr("beta")}, nil}, -1},
-	{Version{1, 0, 0, []PRVersion{prstr("beta")}, nil}, Version{1, 0, 0, []PRVersion{prstr("beta"), prnum(2)}, nil}, -1},
-	{Version{1, 0, 0, []PRVersion{prstr("beta"), prnum(2)}, nil}, Version{1, 0, 0, []PRVersion{prstr("beta"), prnum(11)}, nil}, -1},
-	{Version{1, 0, 0, []PRVersion{prstr("beta"), prnum(11)}, nil}, Version{1, 0, 0, []PRVersion{prstr("rc"), prnum(1)}, nil}, -1},
-	{Version{1, 0, 0, []PRVersion{prstr("rc"), prnum(1)}, nil}, Version{1, 0, 0, nil, nil}, -1},
+	{Version{1, 0, 0, nil, nil, false}, Version{1, 0, 0, []PRVersion{prstr("alpha")}, nil, false}, 1},
+	{Version{1, 0, 0, []PRVersion{prstr("alpha")}, nil, false}, Version{1, 0, 0, []PRVersion{prstr("alpha"), prnum(1)}, nil, false}, -1},
+	{Version{1, 0, 0, []PRVersion{prstr("alpha"), prnum(1)}, nil, false}, Version{1, 0, 0, []PRVersion{prstr("alpha"), prstr("beta")}, nil, false}, -1},
+	{Version{1, 0, 0, []PRVersion{prstr("alpha"), prstr("beta")}, nil, false}, Version{1, 0, 0, []PRVersion{prstr("beta")}, nil, false}, -1},
+	{Version{1, 0, 0, []PRVersion{prstr("beta")}, nil, false}, Version{1, 0, 0, []PRVersion{prstr("beta"), prnum(2)}, nil, false}, -1},
+	{Version{1, 0, 0, []PRVersion{prstr("beta"), prnum(2)}, nil, false}, Version{1, 0, 0, []PRVersion{prstr("beta"), prnum(11)}, nil, false}, -1},
+	{Version{1, 0, 0, []PRVersion{prstr("beta"), prnum(11)}, nil, false}, Version{1, 0, 0, []PRVersion{prstr("rc"), prnum(1)}, nil, false}, -1},
+	{Version{1, 0, 0, []PRVersion{prstr("rc"), prnum(1)}, nil, false}, Version{1, 0, 0, nil, nil, false}, -1},
 
 	// Ignore Build metadata
-	{Version{1, 0, 0, nil, []string{"1", "2", "3"}}, Version{1, 0, 0, nil, nil}, 0},
+	{Version{1, 0, 0, nil, []string{"1", "2", "3"}, false}, Version{1, 0, 0, nil, nil, false}, 0},
 }
 
 func TestCompare(t *testing.T) {
@@ -206,13 +207,13 @@ var wrongformatTests = []wrongformatTest{
 	{nil, "1.1.1-001"},
 	{nil, "1.1.1-beta.01"},
 	{nil, "1.1.1-beta.001"},
-	{&Version{0, 0, 0, []PRVersion{prstr("!")}, nil}, "0.0.0-!"},
-	{&Version{0, 0, 0, nil, []string{"!"}}, "0.0.0+!"},
+	{&Version{0, 0, 0, []PRVersion{prstr("!")}, nil, false}, "0.0.0-!"},
+	{&Version{0, 0, 0, nil, []string{"!"}, false}, "0.0.0+!"},
 	// empty prversion
-	{&Version{0, 0, 0, []PRVersion{prstr(""), prstr("alpha")}, nil}, "0.0.0-.alpha"},
+	{&Version{0, 0, 0, []PRVersion{prstr(""), prstr("alpha")}, nil, false}, "0.0.0-.alpha"},
 	// empty build meta data
-	{&Version{0, 0, 0, []PRVersion{prstr("alpha")}, []string{""}}, "0.0.0-alpha+"},
-	{&Version{0, 0, 0, []PRVersion{prstr("alpha")}, []string{"test", ""}}, "0.0.0-alpha+test."},
+	{&Version{0, 0, 0, []PRVersion{prstr("alpha")}, []string{""}, false}, "0.0.0-alpha+"},
+	{&Version{0, 0, 0, []PRVersion{prstr("alpha")}, []string{"test", ""}, false}, "0.0.0-alpha+test."},
 }
 
 func TestWrongFormat(t *testing.T) {
@@ -244,8 +245,8 @@ func TestWrongTolerantFormat(t *testing.T) {
 }
 
 func TestCompareHelper(t *testing.T) {
-	v := Version{1, 0, 0, []PRVersion{prstr("alpha")}, nil}
-	v1 := Version{1, 0, 0, nil, nil}
+	v := Version{1, 0, 0, []PRVersion{prstr("alpha")}, nil, false}
+	v1 := Version{1, 0, 0, nil, nil, false}
 	if !v.EQ(v) {
 		t.Errorf("%q should be equal to %q", v, v)
 	}
@@ -295,12 +296,12 @@ type incrementTest struct {
 }
 
 var incrementTests = []incrementTest{
-	{Version{1, 2, 3, nil, nil}, PATCH, false, Version{1, 2, 4, nil, nil}},
-	{Version{1, 2, 3, nil, nil}, MINOR, false, Version{1, 3, 0, nil, nil}},
-	{Version{1, 2, 3, nil, nil}, MAJOR, false, Version{2, 0, 0, nil, nil}},
-	{Version{0, 1, 2, nil, nil}, PATCH, false, Version{0, 1, 3, nil, nil}},
-	{Version{0, 1, 2, nil, nil}, MINOR, false, Version{0, 2, 0, nil, nil}},
-	{Version{0, 1, 2, nil, nil}, MAJOR, false, Version{1, 0, 0, nil, nil}},
+	{Version{1, 2, 3, nil, nil, false}, PATCH, false, Version{1, 2, 4, nil, nil, false}},
+	{Version{1, 2, 3, nil, nil, false}, MINOR, false, Version{1, 3, 0, nil, nil, false}},
+	{Version{1, 2, 3, nil, nil, false}, MAJOR, false, Version{2, 0, 0, nil, nil, false}},
+	{Version{0, 1, 2, nil, nil, false}, PATCH, false, Version{0, 1, 3, nil, nil, false}},
+	{Version{0, 1, 2, nil, nil, false}, MINOR, false, Version{0, 2, 0, nil, nil, false}},
+	{Version{0, 1, 2, nil, nil, false}, MAJOR, false, Version{1, 0, 0, nil, nil, false}},
 }
 
 func TestIncrements(t *testing.T) {
@@ -311,6 +312,7 @@ func TestIncrements(t *testing.T) {
 			test.version.Patch,
 			test.version.Pre,
 			test.version.Build,
+			test.version.preUseTilde,
 		}
 		var err error
 		switch test.incrementType {
@@ -394,7 +396,7 @@ func TestNewHelper(t *testing.T) {
 	if v == nil {
 		t.Fatal("Version is nil")
 	}
-	if v.Compare(Version{1, 2, 3, nil, nil}) != 0 {
+	if v.Compare(Version{1, 2, 3, nil, nil, false}) != 0 {
 		t.Fatal("Unexpected comparison problem")
 	}
 }
@@ -404,7 +406,7 @@ func TestMakeHelper(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error %q", err)
 	}
-	if v.Compare(Version{1, 2, 3, nil, nil}) != 0 {
+	if v.Compare(Version{1, 2, 3, nil, nil, false}) != 0 {
 		t.Fatal("Unexpected comparison problem")
 	}
 }

@@ -9,7 +9,7 @@ import (
 
 const (
 	numbers  string = "0123456789"
-	alphas          = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"
+	alphas          = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-~"
 	alphanum        = alphas + numbers
 )
 
@@ -27,6 +27,8 @@ type Version struct {
 	Patch uint64
 	Pre   []PRVersion
 	Build []string //No Precedence
+
+	preUseTilde bool
 }
 
 // Version to string
@@ -39,7 +41,11 @@ func (v Version) String() string {
 	b = strconv.AppendUint(b, v.Patch, 10)
 
 	if len(v.Pre) > 0 {
-		b = append(b, '-')
+		if v.preUseTilde {
+			b = append(b, '~')
+		} else {
+			b = append(b, '-')
+		}
 		b = append(b, v.Pre[0].String()...)
 
 		for _, pre := range v.Pre[1:] {
@@ -315,7 +321,11 @@ func Parse(s string) (Version, error) {
 		patchStr = patchStr[:buildIndex]
 	}
 
-	if preIndex := strings.IndexRune(patchStr, '-'); preIndex != -1 {
+	if preIndex := strings.IndexAny(patchStr, "-~"); preIndex != -1 {
+		if patchStr[preIndex] == '~' {
+			v.preUseTilde = true
+		}
+
 		prerelease = strings.Split(patchStr[preIndex+1:], ".")
 		patchStr = patchStr[:preIndex]
 	}
@@ -352,6 +362,8 @@ func Parse(s string) (Version, error) {
 		}
 		v.Build = append(v.Build, str)
 	}
+
+	fmt.Println("RETURNING", v.String(), v.preUseTilde)
 
 	return v, nil
 }
