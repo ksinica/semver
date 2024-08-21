@@ -363,8 +363,6 @@ func Parse(s string) (Version, error) {
 		v.Build = append(v.Build, str)
 	}
 
-	fmt.Println("RETURNING", v.String(), v.preUseTilde)
-
 	return v, nil
 }
 
